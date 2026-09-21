@@ -7,7 +7,7 @@ const app = express();
 const PORT = 3000;
 
 // ==========================================
-// 1. Interfaces & Types
+// 1. Interfaces & Domain Types
 // ==========================================
 interface WeatherMetrics {
   tempMax: number;
@@ -45,7 +45,7 @@ const dbMockCache = new Map<string, CacheEnvelope>();
 const CACHE_EXPIRATION_HOURS = 1;
 
 // ==========================================
-// 3. Domain Core: Scoring System
+// 3. Domain Core: Scoring Framework
 // ==========================================
 function calculateRankedActivities(metrics: WeatherMetrics): ActivityScore[] {
   const { tempMax, precipitation, snowfall, windSpeed, cloudCover } = metrics;
@@ -172,19 +172,14 @@ const gqRootResolver = {
       rankings: calculateRankedActivities(day.weatherData),
     }));
 
-    return {
-      city,
-      forecastPeriodDays: timeline.length,
-      timeline,
-    };
+    return { city, forecastPeriodDays: timeline.length, timeline };
   },
 };
 
-// Bind modern GraphQL Middleware Handler
 app.all("/graphql", createHandler({ schema: gqSchema, rootValue: gqRootResolver }));
 
 // ==========================================
-// 6. Legacy REST Controller Route (Optional Coexistence)
+// 6. REST Controller Route (Optional Coexistence)
 // ==========================================
 app.get("/api/v1/ranking", async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   try {
@@ -204,7 +199,6 @@ app.get("/api/v1/ranking", async (req: Request, res: Response, next: NextFunctio
   }
 });
 
-// Start Core App
 app.listen(PORT, () => {
   console.log(`Backend ranker operating at http://localhost:${PORT}`);
   console.log(`GraphQL target endpoint available at http://localhost:${PORT}/graphql`);
