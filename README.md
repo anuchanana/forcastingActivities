@@ -1,12 +1,13 @@
 # Weather-Driven Activity Ranking Service
 
-A focused, single-file **TypeScript & Express** backend service that ranks how good the next 7 days will be for specific activities using weather data from **Open-Meteo**.
+A focused, single-file **TypeScript & Express** backend service that ranks how good the next 7 days will be for specific activities using weather data from **Open-Meteo**, accessible via both **GraphQL** and REST.
 
 ---
 
 ## 🚀 Key Features
 
 * **Cache-Aside Strategy:** Stores 7-day weather forecasts in an in-memory map. If an incoming request is less than **1 hour old**, the service serves the cached data instead of calling the upstream API.
+* **Dual API Engine:** Supports a standard **GraphQL endpoint** (`/graphql`) alongside a legacy REST routing endpoint (`/api/v1/ranking`).
 * **Deterministic Scoring Model:** Calculates a normalized score (0.0 to 10.0) based on weather metrics and ranks activities dynamically for each calendar day.
 * **Minimalist Architecture:** Highly focused submission combining domain logic, local storage maps, endpoints, and data interfaces inside one file.
 
@@ -35,10 +36,11 @@ For testing purposes, the following locations are pre-configured:
 
 To run this Node.js service, ensure the following core files are placed together in your root project directory:
 
-1. **`server.ts`** — Contains the entire backend logic, scoring framework, cache management, and server routing.
+1. **`server.ts`** — Contains the entire backend logic, scoring framework, cache management, GraphQL resolvers, and server routing.
 2. **`package.json`** — Manages installation dependencies, shortcut execution scripts, and lint workflows.
 3. **`tsconfig.json`** — Configures your TypeScript compiler environment constraints.
 4. **`eslint.config.js`** — Ensures strict code quality checks and static analysis safety parameters.
+5. **`.gitignore`** — Prevents heavy modules and output build paths from tracking into Git records.
 
 ---
 
@@ -51,7 +53,7 @@ Create the following files in your project directory:
 {
   "name": "weather-activity-ranker",
   "version": "1.0.0",
-  "description": "A focused single-file TypeScript backend service that ranks 7-day activities using Open-Meteo weather forecasts and local in-memory caching.",
+  "description": "Focused single-file TypeScript backend service that ranks 7-day activities using Open-Meteo weather forecasts and local in-memory caching via GraphQL.",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node server.ts",
@@ -61,7 +63,9 @@ Create the following files in your project directory:
   },
   "dependencies": {
     "axios": "^1.7.7",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "graphql": "^16.9.0",
+    "graphql-http": "^1.22.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
@@ -92,32 +96,6 @@ Create the following files in your project directory:
 }
 ```
 
-### `eslint.config.js`
-```javascript
-const tsParser = require("@typescript-eslint/parser");
-const tsPlugin = require("@typescript-eslint/eslint-plugin");
-
-module.exports = [
-  {
-    files: ["server.ts"],
-    languageOptions: {
-      parser: tsParser,
-      ecmaVersion: 2022,
-      sourceType: "commonjs"
-    },
-    plugins: {
-      "@typescript-eslint": tsPlugin
-    },
-    rules: {
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": ["error"],
-      "no-console": "off",
-      "eqeqeq": "error"
-    }
-  }
-];
-```
-
 ---
 
 ## 🏃 Execution
@@ -139,55 +117,64 @@ npm run lint
   ```bash
   npm run dev
   ```
-* **Production Build (Compiles to standard JavaScript in the `/dist` directory):**
-  ```bash
-  npm run build
-  npm start
-  ```
 
-Once initiated, the server will log: `Backend ranker service active at http://localhost:3000`
+Once initiated, the server will log:
+* `Backend ranker operating at http://localhost:3000`
+* `GraphQL target endpoint available at http://localhost:3000/graphql`
 
 ---
 
-## 🎯 API Reference
+## 🎯 API Reference & Testing
 
-### Get Activity Rankings
-* **Endpoint:** `/api/v1/ranking`
-* **Method:** `GET`
-* **Query Parameters:**
-  * `city` (string, required): The target location (e.g., `paris`, `chamonix`, or `oahu`).
+### Option A: GraphQL API (Primary)
+* **Endpoint:** `http://localhost:3000/graphql`
+* **Method:** `POST`
+* **Headers:** `Content-Type: application/json`
 
-#### Sample Request
-```http
-GET http://localhost:3000/api/v1/ranking?city=paris
-```
-
-#### Sample Response Payload
+#### Sample Query Payload
 ```json
 {
-  "city": "paris",
-  "forecastPeriodDays": 7,
-  "source": "open_meteo_api",
-  "timeline": [
-    {
-      "date": "2026-09-22",
-      "rankings": [
-        { "activity": "Outdoor sightseeing", "score": 8.4 },
-        { "activity": "Indoor sightseeing", "score": 5.2 },
-        { "activity": "Surfing", "score": 3.1 },
-        { "activity": "Skiing", "score": 0.0 }
-      ]
-    },
-    {
-      "date": "2026-09-23",
-      "rankings": [
-        { "activity": "Indoor sightseeing", "score": 7.8 },
-        { "activity": "Outdoor sightseeing", "score": 1.0 },
-        { "activity": "Surfing", "score": 0.8 },
-        { "activity": "Skiing", "score": 0.0 }
+  "query": "query { getRankings(city: \"chamonix\") { city forecastPeriodDays timeline { date rankings { activity score } } } }"
+}
+```
+
+#### Test with cURL:
+```bash
+curl -X POST http://localhost:3000/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "query { getRankings(city: \"chamonix\") { city forecastPeriodDays timeline { date rankings { activity score } } } }"}'
+```
+
+### Option B: REST API (Legacy Coexistence)
+* **Endpoint:** `/api/v1/ranking`
+* **Method:** `GET`
+* **Query Parameters:** `city` (string, required)
+
+#### Test with cURL:
+```bash
+curl "http://localhost:3000/api/v1/ranking?city=chamonix"
+```
+
+#### Sample Output Structure (Shared Format)
+```json
+{
+  "data": {
+    "getRankings": {
+      "city": "chamonix",
+      "forecastPeriodDays": 7,
+      "timeline": [
+        {
+          "date": "2026-09-22",
+          "rankings": [
+            { "activity": "Skiing", "score": 8.5 },
+            { "activity": "Indoor sightseeing", "score": 5.0 },
+            { "activity": "Outdoor sightseeing", "score": 1.0 },
+            { "activity": "Surfing", "score": 0.8 }
+          ]
+        }
       ]
     }
-  ]
+  }
 }
 ```
 
@@ -196,4 +183,4 @@ GET http://localhost:3000/api/v1/ranking?city=paris
 ## 🏗️ Architectural Tradeoffs
 
 * **In-Memory Cache Scaling:** Utilizing a runtime `Map` ensures zero external database overhead for this exercise. The cache envelope groups dates under city identifiers for fast cache hit/miss evaluation.
-* **Separation of Evaluation Weights:** Scoring calculations are kept completely separate from the API request parsing loops. This isolation ensures that modifying the scoring algorithm parameters will instantly fix data responses across already-cached payloads without invalidating current entries.
+* **Shared Context Abstraction:** The caching layers and evaluation algorithm functions are kept separate from the Express routing and GraphQL root resolvers. This ensures full reuse of the orchestration framework regardless of which API format hits the gateway.
