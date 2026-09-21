@@ -33,11 +33,12 @@ For testing purposes, the following locations are pre-configured:
 
 ## 📦 Project Structure Checklist
 
-To run this Node.js service, ensure the following **three core files** are placed together in your root project directory:
+To run this Node.js service, ensure the following core files are placed together in your root project directory:
 
 1. **`server.ts`** — Contains the entire backend logic, scoring framework, cache management, and server routing.
-2. **`package.json`** — Manages installation dependencies and shortcut execution scripts.
+2. **`package.json`** — Manages installation dependencies, shortcut execution scripts, and lint workflows.
 3. **`tsconfig.json`** — Configures your TypeScript compiler environment constraints.
+4. **`eslint.config.js`** — Ensures strict code quality checks and static analysis safety parameters.
 
 ---
 
@@ -55,7 +56,8 @@ Create the following files in your project directory:
   "scripts": {
     "dev": "ts-node server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "lint": "eslint server.ts"
   },
   "dependencies": {
     "axios": "^1.7.7",
@@ -64,6 +66,9 @@ Create the following files in your project directory:
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^22.5.5",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@typescript-eslint/parser": "^8.5.0",
+    "eslint": "^9.10.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   }
@@ -87,6 +92,32 @@ Create the following files in your project directory:
 }
 ```
 
+### `eslint.config.js`
+```javascript
+const tsParser = require("@typescript-eslint/parser");
+const tsPlugin = require("@typescript-eslint/eslint-plugin");
+
+module.exports = [
+  {
+    files: ["server.ts"],
+    languageOptions: {
+      parser: tsParser,
+      ecmaVersion: 2022,
+      sourceType: "commonjs"
+    },
+    plugins: {
+      "@typescript-eslint": tsPlugin
+    },
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["error"],
+      "no-console": "off",
+      "eqeqeq": "error"
+    }
+  }
+];
+```
+
 ---
 
 ## 🏃 Execution
@@ -97,7 +128,13 @@ Run the install command to download all required modules:
 npm install
 ```
 
-### 2. Launch the Application
+### 2. Static Code Verification (Linting)
+Run the linter to verify strict code safety and styling norms:
+```bash
+npm run lint
+```
+
+### 3. Launch the Application
 * **Development Mode (Fast execution via `ts-node`):**
   ```bash
   npm run dev
