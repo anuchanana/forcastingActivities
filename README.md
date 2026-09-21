@@ -1,22 +1,22 @@
 # Weather-Driven Activity Ranking Service
 
-A focused, single-file **TypeScript & Express** backend service that ranks the quality of the next 7 days for specific outdoor and indoor activities using weather data from **Open-Meteo**.
+A focused, single-file **TypeScript & Express** backend service that ranks how good the next 7 days will be for specific activities using weather data from **Open-Meteo**.
 
 ---
 
 ## 🚀 Key Features
 
-* **Cache-Aside / Write-Through Strategy:** Stores 7-day weather profiles in an in-memory database mock map. If an incoming request is less than **1 hour old**, the service fetches the results locally instead of hitting the upstream API.
-* **Deterministic Scoring Model:** Calculates normalized performance attributes (0.0 to 10.0) based on weather metrics and ranks them dynamically.
-* **Single File Submission:** Highly focused code structure combining domain logic, local storage maps, endpoints, and data interfaces inside one file.
+* **Cache-Aside Strategy:** Stores 7-day weather forecasts in an in-memory map. If an incoming request is less than **1 hour old**, the service serves the cached data instead of calling the upstream API.
+* **Deterministic Scoring Model:** Calculates a normalized score (0.0 to 10.0) based on weather metrics and ranks activities dynamically for each calendar day.
+* **Minimalist Architecture:** Highly focused submission combining domain logic, local storage maps, endpoints, and data interfaces inside one file.
 
 ---
 
 ## 📊 Tracked Activities
 
-The system processes weather profiles and returns a ranked array containing:
-1. **Skiing:** Highly dependent on sub-freezing limits (< 2°C) and fresh powder accumulation.
-2. **Surfing:** Relies on optimal moderate wind speeds; heavily penalized by downpours or heavy storms.
+The system evaluates weather profiles and returns a ranked list of these four exact activities:
+1. **Skiing:** Requires sub-freezing limits (< 2°C) and fresh powder accumulation.
+2. **Surfing:** Relies on optimal wind speeds; penalized heavily by downpours or heavy storms.
 3. **Outdoor sightseeing:** Optimized around dry conditions, clear cloud gaps, and mild temperatures (sweet spot: 22°C).
 4. **Indoor sightseeing:** Resilient baseline fallback option that climbs in score when bad weather disrupts outdoor alternatives.
 
@@ -31,50 +31,90 @@ For testing purposes, the following locations are pre-configured:
 
 ---
 
-## 📦 Project Structure
+## 📦 Project Structure Checklist
 
-Ensure these three files are placed together in your root project directory:
-* `server.ts` — The core application file containing the service, cache, scoring logic, and server setup.
-* `package.json` — Manages scripts, application runtimes, and dependencies.
-* `tsconfig.json` — Configures the TypeScript compiler.
+To run this Node.js service, ensure the following **three core files** are placed together in your root project directory:
+
+1. **`server.ts`** — Contains the entire backend logic, scoring framework, cache management, and server routing.
+2. **`package.json`** — Manages installation dependencies and shortcut execution scripts.
+3. **`tsconfig.json`** — Configures your TypeScript compiler environment constraints.
 
 ---
 
-## 🛠️ Setup & Execution
+## 🛠️ Configuration & Setup
 
-### 1. Installation
+Create the following files in your project directory:
 
-Run the following command to download all standard production and development dependencies:
+### `package.json`
+```json
+{
+  "name": "weather-activity-ranker",
+  "version": "1.0.0",
+  "description": "A focused single-file TypeScript backend service that ranks 7-day activities using Open-Meteo weather forecasts and local in-memory caching.",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.5.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
+  }
+}
+```
 
+### `tsconfig.json`
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist"
+  },
+  "include": ["server.ts"]
+}
+```
+
+---
+
+## 🏃 Execution
+
+### 1. Install Dependencies
+Run the install command to download all required modules:
 ```bash
 npm install
 ```
 
-### 2. Execution Scripts
-
-The `package.json` includes pre-packaged workflows to simplify running the service:
-
-* **Development Mode (Hot execution with `ts-node`):**
+### 2. Launch the Application
+* **Development Mode (Fast execution via `ts-node`):**
   ```bash
   npm run dev
   ```
-* **Production Build (Compiles TypeScript to standard Javascript):**
+* **Production Build (Compiles to standard JavaScript in the `/dist` directory):**
   ```bash
   npm run build
-  ```
-* **Production Run (Launches the compiled build folder):**
-  ```bash
   npm start
   ```
 
-Once initialized via `npm run dev`, the engine is operational at `http://localhost:3000`.
+Once initiated, the server will log: `Backend ranker service active at http://localhost:3000`
 
 ---
 
 ## 🎯 API Reference
 
 ### Get Activity Rankings
-
 * **Endpoint:** `/api/v1/ranking`
 * **Method:** `GET`
 * **Query Parameters:**
@@ -118,5 +158,5 @@ GET http://localhost:3000/api/v1/ranking?city=paris
 
 ## 🏗️ Architectural Tradeoffs
 
-* **In-Memory Cache Scaling:** Utilizing a simple map ensures zero external database overhead for this exercise. The runtime envelope explicitly groups dates under city identifiers for efficient cache hit/miss evaluation.
-* **Separation of Evaluation Weights:** Scoring calculations are kept completely separate from the API request parsing loops. This isolation ensures that modifying the algorithm weights will instantly fix data responses across already-cached payloads without invalidating current historical rows.
+* **In-Memory Cache Scaling:** Utilizing a runtime `Map` ensures zero external database overhead for this exercise. The cache envelope groups dates under city identifiers for fast cache hit/miss evaluation.
+* **Separation of Evaluation Weights:** Scoring calculations are kept completely separate from the API request parsing loops. This isolation ensures that modifying the scoring algorithm parameters will instantly fix data responses across already-cached payloads without invalidating current entries.
