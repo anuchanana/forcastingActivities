@@ -1,0 +1,30 @@
+{
+  "name": "weather-activity-ranker",
+  "version": "1.0.0",
+  "description": "A focused single-file TypeScript backend service that ranks 7-day activities using Open-Meteo weather forecasts and local in-memory caching.",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "keywords": [
+    "typescript",
+    "express",
+    "open-meteo",
+    "caching",
+    "backend"
+  ],
+  "author": "AI Collaborator",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.5.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
+  }
+}
