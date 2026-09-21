@@ -6,7 +6,7 @@ A focused, single-file **TypeScript & Express** backend service that ranks the q
 
 ## 🚀 Key Features
 
-* **Cache-Aside / Write-Through Strategy:** Automatically stores 7-day weather profiles in an in-memory database mock map. If an incoming request is less than **1 hour old**, the service fetches the results locally instead of hitting the upstream API.
+* **Cache-Aside / Write-Through Strategy:** Stores 7-day weather profiles in an in-memory database mock map. If an incoming request is less than **1 hour old**, the service fetches the results locally instead of hitting the upstream API.
 * **Deterministic Scoring Model:** Calculates normalized performance attributes (0.0 to 10.0) based on weather metrics and ranks them dynamically.
 * **Single File Submission:** Highly focused code structure combining domain logic, local storage maps, endpoints, and data interfaces inside one file.
 
@@ -31,45 +31,43 @@ For testing purposes, the following locations are pre-configured:
 
 ---
 
+## 📦 Project Structure
+
+Ensure these three files are placed together in your root project directory:
+* `server.ts` — The core application file containing the service, cache, scoring logic, and server setup.
+* `package.json` — Manages scripts, application runtimes, and dependencies.
+* `tsconfig.json` — Configures the TypeScript compiler.
+
+---
+
 ## 🛠️ Setup & Execution
 
 ### 1. Installation
 
-Clone or download the `server.ts` file, initialize your workspace, and install the required dependencies:
+Run the following command to download all standard production and development dependencies:
 
 ```bash
-npm init -y
-npm install express axios
-npm install --save-dev typescript @types/node @types/express ts-node
+npm install
 ```
 
-### 2. Configuration (`tsconfig.json`)
+### 2. Execution Scripts
 
-Generate or update a standard `tsconfig.json` profile to map the compiler limits cleanly:
+The `package.json` includes pre-packaged workflows to simplify running the service:
 
-```json
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "CommonJS",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist"
-  },
-  "include": ["server.ts"]
-}
-```
+* **Development Mode (Hot execution with `ts-node`):**
+  ```bash
+  npm run dev
+  ```
+* **Production Build (Compiles TypeScript to standard Javascript):**
+  ```bash
+  npm run build
+  ```
+* **Production Run (Launches the compiled build folder):**
+  ```bash
+  npm start
+  ```
 
-### 3. Run the Server
-
-Launch the development engine runtime loop directly using `ts-node`:
-
-```bash
-npx ts-node server.ts
-```
-The console will confirm operational health: `Backend ranker service active at http://localhost:3000`
+Once initialized via `npm run dev`, the engine is operational at `http://localhost:3000`.
 
 ---
 
@@ -115,3 +113,10 @@ GET http://localhost:3000/api/v1/ranking?city=paris
   ]
 }
 ```
+
+---
+
+## 🏗️ Architectural Tradeoffs
+
+* **In-Memory Cache Scaling:** Utilizing a simple map ensures zero external database overhead for this exercise. The runtime envelope explicitly groups dates under city identifiers for efficient cache hit/miss evaluation.
+* **Separation of Evaluation Weights:** Scoring calculations are kept completely separate from the API request parsing loops. This isolation ensures that modifying the algorithm weights will instantly fix data responses across already-cached payloads without invalidating current historical rows.
